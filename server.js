@@ -332,6 +332,10 @@ app.post("/api/generate-report", async (req, res) => {
       return res.status(400).json({ error: "Missing report content in request body. Send as plain text or JSON with 'report' field." });
     }
 
+    // Convert newline markers back to actual newlines
+    report = report.replace(/\[NL\]/g, "\n");
+    report = report.replace(/\[QUOTE\]/g, '"');
+
     cleanupOldFiles();
 
     const docChildren = parseReportToDocx(report);
