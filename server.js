@@ -359,7 +359,9 @@ app.post("/api/generate-report", async (req, res) => {
 
     fs.writeFileSync(filePath, buffer);
 
-    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['host'];
+    const baseUrl = `${protocol}://${host}`;
     const downloadUrl = `${baseUrl}/files/${fileName}`;
 
     res.json({
