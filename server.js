@@ -20,6 +20,8 @@ const fs = require("fs");
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
+app.use(express.text({ limit: "5mb", type: "text/plain" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
 // Serve generated files
 const OUTPUT_DIR = path.join(__dirname, "generated");
@@ -314,10 +316,20 @@ function isTableRow(line) {
 // API endpoint
 app.post("/api/generate-report", async (req, res) => {
   try {
-    const { report } = req.body;
+    let report;
 
-    if (!report) {
-      return res.status(400).json({ error: "Missing 'report' field in request body" });
+    // Support both JSON body {"report": "..."} and plain text body
+    if (typeof req.body === "string") {
+      report = req.body;
+    } else if (req.body && req.body.report) {
+      report = req.body.report;
+    } else {
+      // Try to extract from any body format
+      report = JSON.stringify(req.body);
+    }
+
+    if (!report || report.length < 10) {
+      return res.status(400).json({ error: "Missing report content in request body. Send as plain text or JSON with 'report' field." });
     }
 
     cleanupOldFiles();
